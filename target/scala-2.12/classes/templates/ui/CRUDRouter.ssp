@@ -1,0 +1,32 @@
+#import(com.dotecofy.generator.model._)
+<%@ import
+val entities: List[Entity] %>
+
+const routes = [
+#for (entity <- entities)
+    {
+    path: "/${entity.name.toLowerCase}s",
+    name: "${entity.name.toLowerCase}s",
+    component: () => import("@${entity.folder}/${entity.name}s.vue"),
+    },
+    {
+    path: "/${entity.name.toLowerCase}s/new",
+    name: "new-${entity.name.toLowerCase}",
+    component: () => import("@${entity.folder}/New${entity.name}.vue"),
+    },
+    {
+    path: "/${entity.name.toLowerCase}s/:signature",
+    name: "${entity.name.toLowerCase}",
+    component: () => import("@${entity.folder}/${entity.name}.vue"),
+    },
+    #for (son <- entity.sons)
+        {
+        path: "/${entity.name.toLowerCase}s/:signature/${son.entity.name.toLowerCase}s",
+        name: "${entity.name.toLowerCase}-${son.entity.name.toLowerCase}",
+        component: () => import("@${entity.folder}/${entity.name}${son.entity.name}.vue"),
+        },
+    #end
+#end
+];
+
+export default routes;

@@ -1,0 +1,59 @@
+#import(com.dotecofy.generator.model._)
+<%@ import
+val entity: Entity %>
+<%@ val fatherName: String %>
+<%@ val links: List[Link] %>
+<template>
+<div>
+    <b-nav tabs>
+    #for (link <- links)
+        <b-nav-item :to="${link.link}" #if (link.active) active #end>${link.name}</b-nav-item>
+    #end
+    </b-nav>
+    <div>
+        <b-button-toolbar>
+            <b-button-group class="mx-1">
+            <b-btn to="/${name.toLowerCase}s/new">New</b-btn>
+            </b-button-group>
+        </b-button-toolbar>
+        <b-table striped hover :items="${name.toLowerCase}s" @row-clicked="rowClick"></b-table>
+    </div>
+</div>
+</template>
+
+<script>
+    import axios from 'axios'
+
+    export default {
+    name: '${name}s',
+    data () {
+    return {
+    ${name.toLowerCase}s: []
+    }
+    },
+    created () {
+    // fetch the data when the view is created and the data is
+    // already being observed
+    this.fetchData()
+    },
+    watch: {
+    // call again the method if the route changes
+    '$route': 'fetchData'
+    },
+    methods: {
+    fetchData () {
+    this.error = this.post = null
+    this.loading = true
+    // replace `getPost` with your data fetching util / API wrapper
+    axios.get('http://localhost:8080/${name.toLowerCase}s/${fatherName.toLowerCase}/' + this.$route.params.signature).then((response) => {
+    this.${name.toLowerCase}s = response.data
+    }/*, (error) => {
+    log(error)
+    }*/)
+    },
+    rowClick(record) {
+    this.$router.push('/${name.toLowerCase}s/'+record.signature)
+    }
+    }
+    }
+</script>

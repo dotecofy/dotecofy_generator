@@ -1,0 +1,52 @@
+#import(com.dotecofy.generator.model._)
+<%@ import val entity: Entity %>
+<template>
+    <b-form @submit="onSubmit">
+    #for (father <- fathers)
+        <b-form-input
+            id="${father.name}"
+            type="number"
+            v-model.number="form.${father.name}"
+            required
+            placeholder="id"
+        ></b-form-input>
+    #end
+    #for (field <- fields)
+        <b-form-input
+            id="${field.name}"
+            type="text"
+            v-model="form.${field.name}"
+            required
+            placeholder="${field.name}"
+        ></b-form-input>
+    #end
+    <b-button type="submit" variant="primary">Submit</b-button>
+    </b-form>
+</template>
+
+<script>
+    import axios from 'axios'
+
+    export default {
+    data() {
+    return {
+    form: {
+    #for (father <- fathers)
+        ${father.name}: 0,
+    #end
+    #for (field <- fields)
+        ${field.name}: "",
+    #end
+    },
+    show: true
+    };
+    },
+    methods: {
+    onSubmit(evt) {
+    evt.preventDefault();
+    //alert(JSON.stringify(this.form));
+    axios.post('http://localhost:8080/${name.toLowerCase}s', this.form ).then();
+    },
+    }
+    };
+</script>

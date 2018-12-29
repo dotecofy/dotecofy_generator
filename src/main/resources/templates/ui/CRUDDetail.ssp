@@ -1,0 +1,62 @@
+#import(com.dotecofy.generator.model._)
+<%@ import
+val entity: Entity %>
+<template>
+<div>
+    <b-nav tabs>
+    <b-nav-item active>Detail</b-nav-item>
+    #for (son <- sons)
+        <b-nav-item :to="{path: '/${name.toLowerCase}s/' + this.$route.params.signature + '/${son.entity.name.toLowerCase}s'}">${son.entity.name}</b-nav-item>
+    #end
+    </b-nav>
+    <div>
+        <b-card
+            border-variant="primary"
+            v-bind:header="${name.toLowerCase}.name"
+            header-bg-variant="primary"
+            header-text-variant="white"
+            align="center"
+            >
+            <p class="card-text">{{${name.toLowerCase}.description}}</p>
+        </b-card>
+    </div>
+</div>
+</template>
+
+<script>
+    import axios from "axios";
+
+    export default {
+    name: "${name}",
+    data() {
+    return {
+    ${name.toLowerCase}: []
+    };
+    },
+    created() {
+    // fetch the data when the view is created and the data is
+    // already being observed
+    this.fetchData();
+    },
+    watch: {
+    // call again the method if the route changes
+    $route: "fetchData"
+    },
+    methods: {
+    fetchData() {
+    this.error = this.post = null;
+    this.loading = true;
+    // replace `getPost` with your data fetching util / API wrapper
+    axios
+    .get("http://localhost:8080/${name.toLowerCase}s/" + this.$route.params.signature)
+    .then(
+    response => {
+    this.${name.toLowerCase} = response.data;
+    } /*, (error) => {
+    log(error)
+    }*/
+    );
+    }
+    }
+    };
+</script>

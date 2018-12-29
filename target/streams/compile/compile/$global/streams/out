@@ -1,0 +1,4 @@
+[0m[[0m[31merror[0m] [0m[0m/home/joel/dest_cloud/dotecofy/generator/src/main/scala/com/dotecofy/generator/CRUDGenerator.scala:133:71: value father is not a member of com.dotecofy.generator.model.Son[0m
+[0m[[0m[31merror[0m] [0m[0m      val pw = new PrintWriter(new File(src + "/" + entity.name + son.father.entity.name + ".vue"))[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                      ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m

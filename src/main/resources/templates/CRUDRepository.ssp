@@ -1,0 +1,243 @@
+#import(com.dotecofy.generator.model._)
+<%@ import
+val entity: Entity %>
+package ${pkg}
+
+import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
+import java.time.ZonedDateTime
+
+import com.dotecofy.exception.{CommonError, Error, ErrorBuilder}
+import ${pkg}.${name}Repository.autoSession
+import scalikejdbc._
+
+case class ${name}DB(
+#if (id != null)
+    ${id.name}:${id.dataType} = 0,
+#end
+#if (signature != null)
+    ${signature.name}:String = null,
+#end
+#for (father <- fathers)
+    #if (!father.mandatory) ${father.name}: Option[${father.dataType}] = None,
+    #else ${father.name}: ${father.dataType},
+    #end
+#end
+#for (field <- fields)
+    #if (!field.mandatory) ${field.name}: Option[${field.dataType}] = None,
+    #else ${field.name}: ${field.dataType},
+    #end
+#end
+#if (createdDate)
+    createdDate: ZonedDateTime = null,
+#end
+#if (updatedDate)
+    updatedDate: Option[ZonedDateTime] = None,
+#end
+)
+
+trait ${name}RepositoryComponent {
+
+def create(${name.toLowerCase}: ${name}DB)(implicit session: DBSession = autoSession): Either[Error, ${name}DB]
+
+def update(signature: String, ${name.toLowerCase}: ${name}DB)(implicit session: DBSession = autoSession): Either[Error, ${name}DB]
+
+def delete(signature: String)(implicit session: DBSession = autoSession): Either[Error, Unit]
+
+def findByUser(userId: Int, index: Int, nb: Int)(implicit session: DBSession = autoSession): Either[Error, List[${name}DB]]
+
+def findIfAllowed(userId: Int, workspaceSign: String)(implicit session: DBSession = autoSession): Either[Error, Option[${name}DB]]
+
+#if (signature != null)
+def findBySignature(signature: String)(implicit session: DBSession = autoSession): Either[Error, Option[${name}DB]]
+#end
+
+#for (father <- fathers)
+    def findBy${father.entity.name}(signature: String)(implicit session: DBSession = autoSession): Either[Error, List[${name}DB]]
+#end
+
+#for (son <- sons)
+    #if(son.middleEntity!=null)
+        def findBy${son.entity.name}(signature: String)(implicit session: DBSession = autoSession): Either[Error, List[${name}DB]]
+    #end
+#end
+
+}
+
+object ${name}Repository extends ${name}RepositoryComponent with SQLSyntaxSupport[${name}DB] {
+
+//override val schemaName = Some("dotecofy")
+override val tableName = "${name.toLowerCase}"
+/*override val columns = Seq(
+#if (id != null)
+    "${id.dbName}",
+#end
+#if (signature != null)
+    "${signature.dbName}",
+#end
+#for (father <- fathers)
+    "${father.dbName}",
+#end
+#for (field <- fields)
+    "${field.dbName}",
+#end
+#if (createdDate)
+    "created_date",
+#end
+#if (updatedDate)
+    "updated_date",
+#end
+)*/
+val w = ${name}Repository.syntax("w")
+override val autoSession = AutoSession
+
+override def create(${name.toLowerCase}: ${name}DB)(implicit session: DBSession = autoSession): Either[Error, ${name}DB] = {
+
+try {
+val generatedKey = withSQL {
+insert.into(${name}Repository).namedValues(
+#if (signature != null)
+    column.${signature.name} -> ${name.toLowerCase}.${signature.name},
+#end
+#for (father <- fathers)
+    #if (father.insert)
+    column.${father.name} -> ${name.toLowerCase}.${father.name},
+    #end
+#end
+#for (field <- fields)
+    #if (field.insert)
+    column.${field.name} -> ${name.toLowerCase}.${field.name},
+    #end
+#end
+#if (createdDate)
+    column.createdDate -> ZonedDateTime.now,
+#end
+)
+}.updateAndReturnGeneratedKey.apply()
+
+val findW: Option[${name}DB] = find(generatedKey.toInt)
+findW match {
+case Some(ret) => Right(ret)
+case None => Left(ErrorBuilder.internalError(CommonError.ERROR_COULD_NOT_INSERT, "The generated key is not found in database"))
+}
+
+} catch {
+case integrity: SQLIntegrityConstraintViolationException => Left(Error(ErrorBuilder.SQL_EXCEPTION, CommonError.SQL_CONSTRAINT_VIOLATION, Option(integrity.getMessage), Option(List())))
+case sql: SQLException => Left(Error(ErrorBuilder.SQL_EXCEPTION, sql.getErrorCode.toString, Option(sql.getMessage), Option(List())))
+}
+
+}
+
+override def update(signature: String, ${name.toLowerCase}: ${name}DB)(implicit session: DBSession = autoSession): Either[Error, ${name}DB] = {
+
+try {
+withSQL {
+scalikejdbc.update(${name}Repository).set(
+#if (signature != null)
+    column.${signature.name} -> ${name.toLowerCase}.${signature.name},
+#end
+#for (father <- fathers)
+    #if (father.update)
+        column.${father.name} -> ${name.toLowerCase}.${father.name},
+    #end
+#end
+#for (field <- fields)
+    #if (field.update)
+        column.${field.name} -> ${name.toLowerCase}.${field.name},
+    #end
+#end
+#if (updatedDate)
+    column.createdDate -> ZonedDateTime.now,
+#end
+).where.eq(column.signature, signature)
+}.update.apply()
+
+val findW: Option[${name}DB] = findBySignature(${name.toLowerCase}.signature).getOrElse(None)
+findW match {
+case Some(ret) => Right(ret)
+case None => Left(ErrorBuilder.internalError(CommonError.ERROR_COULD_NOT_UPDATE, "The signature is not found in database"))
+}
+} catch {
+case integrity: SQLIntegrityConstraintViolationException => Left(Error(ErrorBuilder.SQL_EXCEPTION, CommonError.SQL_CONSTRAINT_VIOLATION, Option(integrity.getMessage), Option(List())))
+case sql: SQLException => Left(Error(ErrorBuilder.SQL_EXCEPTION, sql.getErrorCode.toString, Option(sql.getMessage), Option(List())))
+}
+}
+
+override def delete(signature: String)(implicit session: DBSession): Either[Error, Unit] = {
+withSQL {
+scalikejdbc.delete.from(${name}Repository).where.eq(column.signature, signature)
+}.update.apply()
+Right()
+}
+
+override def findByUser(userId: Int, index: Int, nb: Int)(implicit session: DBSession): Either[Error, List[${name}DB]] = {
+//val ${name.toLowerCase}s: List[${name}DB] = sql"select \${w.result.*} from \${${name}Repository.as(w)} where id in(select id_tuple from group_right inner join `right` on group_right.id_right=right.id inner join user_group on group_right.id_group=user_group.id_group where user_group.id_user=\${userId} and right.right='VIEW_WORKSPACE')"
+val ${name.toLowerCase}s: List[${name}DB] =
+sql"select \${w.result.*} from \${${name}Repository.as(w)}"
+.map(${name}Repository(w.resultName)).list.apply()
+Right(${name.toLowerCase}s)
+}
+
+override def findIfAllowed(userId: Int, signature: String)(implicit session: DBSession): Either[Error, Option[${name}DB]] = {
+val ${name.toLowerCase}: Option[${name}DB] =
+sql"select \${w.result.*} from \${${name}Repository.as(w)} inner join group_right on \${w.id} = group_right.id_tuple inner join user_group on group_right.id_group = user_group.id_group inner join `right` on group_right.id_right=right.id where user_group.id_user=\${userId} and \${w.signature}=\${signature} and right.right='VIEW_WORKSPACE';"
+.map(${name}Repository(w.resultName)).single.apply()
+
+Right(${name.toLowerCase})
+}
+
+private def find(id: Int)(implicit session: DBSession = autoSession): Option[${name}DB] = {
+withSQL {
+select.from(${name}Repository as w).where.eq(w.id, id)
+}.map(${name}Repository(w.resultName)).single.apply()
+}
+
+#if (signature != null)
+def findBySignature(signature: String)(implicit session: DBSession = autoSession): Either[Error, Option[${name}DB]] = {
+val ${name.toLowerCase}: Option[${name}DB] = withSQL {
+select.from(${name}Repository as w).where.eq(w.signature, signature)
+}.map(${name}Repository(w.resultName)).single.apply()
+Right(${name.toLowerCase})
+}
+#end
+
+#for (father <- fathers)
+def findBy${father.entity.name}(signature: String)(implicit session: DBSession = autoSession): Either[Error, List[${name}DB]] = {
+val ${name.toLowerCase}s: List[${name}DB] = sql"select \${w.result.*} from \${${name}Repository.as(w)} inner join ${father.entity.name.toLowerCase} on w.${father.dbName}=${father.entity.name.toLowerCase}.id where ${father.entity.name.toLowerCase}.signature=\${signature}"
+.map(${name}Repository(w.resultName)).list.apply()
+Right(${name.toLowerCase}s)
+}
+#end
+
+#for (son <- sons)
+    #if(son.middleEntity!=null)
+    def findBy${son.entity.name}(signature: String)(implicit session: DBSession = autoSession): Either[Error, List[${name}DB]] = {
+        val ${name.toLowerCase}s: List[${name}DB] = sql"select \${w.result.*} from \${${name}Repository.as(w)} inner join ${son.middleEntity.dbName} on w.id=${son.middleEntity.dbName}.${son.dbName} inner join ${son.entity.dbName} on ${son.entity.dbName}.id=${son.middleEntity.dbName}.${son.middleEntityDbFieldName} where ${son.entity.dbName}.signature=\${signature}"
+        .map(${name}Repository(w.resultName)).list.apply()
+        Right(${name.toLowerCase}s)
+    }
+    #end
+#end
+
+def apply(w: SyntaxProvider[${name}DB])(rs: WrappedResultSet): ${name}DB = apply(w.resultName)(rs)
+
+def apply(w: ResultName[${name}DB])(rs: WrappedResultSet): ${name}DB = new ${name}DB(
+#if (id != null)
+${id.name} = rs.get(w.${id.name}),
+#end
+#if (signature != null)
+${signature.name} = rs.get(w.${signature.name}),
+#end
+#for (father <- fathers)
+${father.name} = rs.get(w.${father.name}),
+#end
+#for (field <- fields)
+${field.name} = rs.get(w.${field.name}),
+#end
+#if (createdDate)
+createdDate = rs.get(w.createdDate),
+#end
+#if (updatedDate)
+updatedDate = rs.get(w.updatedDate),
+#end
+)
+}

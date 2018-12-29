@@ -1,0 +1,56 @@
+#import(com.dotecofy.generator.model._)
+<%@ import
+val entity: Entity %>
+package ${pkg}
+
+import com.dotecofy.access.user.User
+import org.json4s.{DefaultFormats, Formats}
+import org.scalatra.{CorsSupport, FutureSupport, ScalatraBase, ScalatraServlet}
+import org.scalatra.json.JacksonJsonSupport
+
+
+trait ${name}Routes extends ScalatraBase with FutureSupport with JacksonJsonSupport with CorsSupport{
+
+val user = new User(id = 1, fullname = "Joël Favre", email = "joel.favre@dest.cloud")
+
+implicit val repository:${name}RepositoryComponent = ${name}Repository
+
+get("/") {
+${name}Services.findByUser(user, 0, 50)
+}
+
+#if (signature != null)
+    get("/:signature") {
+    ${name}Services.findBySignature(params("signature"))
+    }
+#end
+
+#for (father <- fathers)
+    get("/${father.entity.name.toLowerCase}/:signature") {
+    ${name}Services.findBy${father.entity.name}(params("signature"))
+    }
+#end
+
+#for (son <- sons)
+    #if(son.middleEntity!=null)
+        get("/${son.entity.name.toLowerCase}/:signature") {
+        ${name}Services.findBy${son.entity.name}(params("signature"))
+        }
+    #end
+#end
+
+post("/") {
+${name}Services.create(user, parsedBody.extract[${name}Srv])
+}
+
+}
+
+class ${name}API extends ScalatraServlet with FutureSupport with ${name}Routes {
+
+protected implicit def executor = scala.concurrent.ExecutionContext.Implicits.global
+protected implicit val jsonFormats: Formats = DefaultFormats
+
+before() {
+contentType = formats("json")
+}
+}

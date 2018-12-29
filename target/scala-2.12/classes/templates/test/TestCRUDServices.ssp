@@ -1,0 +1,74 @@
+#import(com.dotecofy.generator.model._)
+<%@ import
+val entity: Entity %>
+package ${pkg}
+
+import java.time.ZonedDateTime
+
+import com.dotecofy.exception.CommonError
+import com.dotecofy.connector.DBConnector
+
+import org.specs2.mutable.Specification
+import org.specs2.specification.{AfterAll, BeforeAll, BeforeEach}
+import scalikejdbc.config.{DBs, DBsWithEnv}
+import scalikejdbc.NamedDB
+import scalikejdbc.specs2.mutable.AutoRollback
+
+import scala.language.postfixOps
+
+import com.dotecofy.access.user.User
+
+class Test${name}Services extends Specification with BeforeEach with AfterAll {
+
+//DBConnector.init()
+
+//DBsWithEnv("dev").setupAll()
+
+val user = User(id = 1, fullname = "Peter Parker", email = "peter.parker@example.com")
+
+implicit val repository: ${name}RepositoryComponent = ${name}Repository
+
+override def before(): Unit = {
+DBsWithEnv("dev").setupAll()
+//Thread.sleep(100)
+//DBConnector.init()
+}
+
+"Insert" in new AutoRollback {
+"Simple insert" >> {
+${name}Services.create(user, ${name}Srv(
+#for (father <- fathers)
+    #if(father.insert) 1, #end
+#end
+#for (i <- 0 to fields.size-1)
+    #if(fields(i).insert) #if (i>0), #end ${fields(i).name}=(scala.util.Random.alphanumeric take ${fields(i).max}).mkString #end
+#end
+)) must beRight
+}
+}
+
+
+
+/*"Update" >> {
+"Simple update" >> {
+WorkspaceServices.create(user, new WorkspaceSrv("update-ws1", "Update Workspace 1", "Description ws 1", ZonedDateTime.now(), null))
+WorkspaceServices.update(user, "update-workspace-1", new WorkspaceSrv("update-ws1.1", "Update Workspace 1.1", "Description ws 1.1", null, null)) must beLike {
+case Right(ws) => (ws.name must beEqualTo("Update Workspace 1.1")) and (ws.description must beEqualTo("Description ws 1.1"))
+}
+}*/
+
+
+override def afterAll(): Unit = {
+/*WorkspaceRepository.delete("ws1")
+WorkspaceRepository.delete("signature-unique-violation")
+WorkspaceRepository.delete("name-unique-violation")
+
+WorkspaceRepository.delete("updatew-s1")
+WorkspaceRepository.delete("update-sig-violation2")
+WorkspaceRepository.delete("update-sig-violation3")
+WorkspaceRepository.delete("workspace-1")
+WorkspaceRepository.delete("update-workspace-1")*/
+
+DBs.closeAll()
+}
+}

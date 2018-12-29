@@ -1,0 +1,238 @@
+#import(com.dotecofy.generator.model._)
+<%@ import
+val entity: Entity %>
+package ${pkg}
+
+import java.time.ZonedDateTime
+
+import com.dotecofy.access.user.User
+import com.dotecofy.exception.{CommonError, Error, ErrorBuilder}
+import com.github.slugify.Slugify
+
+import scala.collection.mutable.ArrayBuffer
+
+#if (signature != null && signature.generateFrom.equals("_random"))
+    import scala.language.postfixOps
+    #end
+
+case class ${name}Srv(
+#for (father <- fathers)
+    #if (!father.mandatory) ${father.name}: Option[${father.dataType}],
+    #else ${father.name}: ${father.dataType},
+    #end
+#end
+#if (signature != null)
+    ${signature.name}:String = null,
+#end
+#for (field <- fields)
+    ${field.name}: ${field.dataType},
+#end
+#if (createdDate)
+    createdDate: ZonedDateTime = null,
+#end
+#if (updatedDate)
+    updatedDate: ZonedDateTime = null,
+#end
+)
+
+trait ${name}ServicesComponent {
+
+val ERROR_INVALID_${name.toUpperCase}_FORM = "invalid_${name.toLowerCase}_form"
+
+val SIGNATURE_MAX_LENGTH = 80
+val SIGNATURE_MIN_LENGTH = 3
+
+val NAME_MAX_LENGTH = 50
+val NAME_MIN_LENGTH = 3
+
+val DESCRIPTION_MAX_LENGTH = 200
+
+def create(user: User, p${name}: ${name}Srv)(implicit repository: ${name}RepositoryComponent): Either[Error, ${name}Srv]
+
+def update(user: User, signature: String, p${name}: ${name}Srv)(implicit repository: ${name}RepositoryComponent): Either[Error, ${name}Srv]
+
+def delete(user: User, signature: String)(implicit repository: ${name}RepositoryComponent): Either[Error, Unit]
+
+def findByUser(user: User, index: Int, nb: Int)(implicit repository: ${name}RepositoryComponent): Either[Error, List[${name}Srv]]
+
+#if (signature != null)
+    def findBySignature(signature: String)(implicit repository: ${name}RepositoryComponent): Either[Error, Option[${name}Srv]]
+#end
+
+#for (father <- fathers)
+    def findBy${father.entity.name}(signature: String)(implicit repository: ${name}RepositoryComponent): Either[Error, List[${name}Srv]]
+#end
+
+#for (son <- sons)
+    #if(son.middleEntity!=null)
+        def findBy${son.entity.name}(signature: String)(implicit repository: ${name}RepositoryComponent): Either[Error, List[${name}Srv]]
+    #end
+#end
+
+}
+
+object ${name}Services extends ${name}ServicesComponent {
+
+override def create(user: User,p${name}: ${name}Srv)(implicit repository: ${name}RepositoryComponent): Either[Error, ${name}Srv] = {
+
+val fieldErrors = ArrayBuffer.empty[Error]
+//if (isSignatureTooLong(p${name}.signature)) fieldErrors.append(ErrorBuilder.fieldError("signature", "signature_too_long"))
+//if (isSignatureTooShort(p${name}.signature)) fieldErrors.append(ErrorBuilder.fieldError("signature", "signature_too_short"))
+//if (isNameTooLong(p${name}.name)) fieldErrors.append(ErrorBuilder.fieldError("name", "name_too_long"))
+//if (isNameTooShort(p${name}.name)) fieldErrors.append(ErrorBuilder.fieldError("name", "name_too_short"))
+//if (isDescriptionTooLong(p${name}.description)) fieldErrors.append(ErrorBuilder.fieldError("description", "description_too_long"))
+if (!fieldErrors.isEmpty) {
+return Left(ErrorBuilder.invalidForm(ERROR_INVALID_${name.toUpperCase}_FORM, "Please verify the form", fieldErrors.toList))
+}
+
+val ${name.toLowerCase}DB = ${name}DB(
+
+#for (father <- fathers)
+    #if (father.insert)
+        ${father.name} = p${name}.${father.name},
+    #end
+#end
+#if (signature != null)
+    #if (signature.generateFrom.equals("_random"))
+        ${signature.name} = (scala.util.Random.alphanumeric take 12).mkString,
+    #else
+        ${signature.name} = new Slugify().slugify(p${name}.${signature.generateFrom}),
+    #end
+#end
+#for (field <- fields)
+    #if (field.insert)
+        #if (field.mandatory) ${field.name} = p${name}.${field.name} #else ${field.name} = Option(p${name}.${field.name}) #end,
+    #end
+#end
+
+/*0,
+new Slugify().slugify(p${name}.name),
+p${name}.name,
+Option(p${name}.description),
+null, None*/
+)
+val resp = repository.create(${name.toLowerCase}DB)
+resp match {
+case Left(ret) => Left(transformError(ret))
+case Right(ret) => Right(dbToSrv(ret))
+}
+}
+
+override def update(user: User, signature: String, p${name}: ${name}Srv)(implicit repository: ${name}RepositoryComponent): Either[Error, ${name}Srv] = {
+
+val fieldErrors = ArrayBuffer.empty[Error]
+//if (isSignatureTooLong(p${name}.signature)) fieldErrors.append(ErrorBuilder.fieldError("signature", "signature_too_long"))
+//if (isSignatureTooShort(p${name}.signature)) fieldErrors.append(ErrorBuilder.fieldError("signature", "signature_too_short"))
+//if (isNameTooLong(p${name}.name)) fieldErrors.append(ErrorBuilder.fieldError("name", "name_too_long"))
+//if (isNameTooShort(p${name}.name)) fieldErrors.append(ErrorBuilder.fieldError("name", "name_too_short"))
+//if (isDescriptionTooLong(p${name}.description)) fieldErrors.append(ErrorBuilder.fieldError("description", "description_too_long"))
+if (!fieldErrors.isEmpty) {
+return Left(ErrorBuilder.invalidForm(ERROR_INVALID_${name.toUpperCase}_FORM, "Please verify the form", fieldErrors.toList))
+}
+
+val ${name.toLowerCase}DB = ${name}DB(
+#for (father <- fathers)
+    ${father.name} = p${name}.${father.name},
+#end
+#if (signature != null && !signature.generateFrom.equals("_random") )
+        ${signature.name} = new Slugify().slugify(p${name}.${signature.generateFrom}),
+#end
+#for (field <- fields)
+    #if (field.update)
+        #if (field.mandatory) ${field.name} = p${name}.${field.name} #else ${field.name} = Option(p${name}.${field.name}) #end,
+    #end
+#end
+/*0,
+new Slugify().slugify(p${name}.name),
+p${name}.name,
+Option(p${name}.description),
+null, None*/
+)
+val resp = repository.update(signature, ${name.toLowerCase}DB)
+resp match {
+case Left(ret) => Left(transformError(ret))
+case Right(ret) => Right(dbToSrv(ret))
+}
+}
+
+override def delete(user: User, signature: String)(implicit repository: ${name}RepositoryComponent): Either[Error, Unit] = {
+repository.delete(signature)
+}
+
+override def findByUser(user: User, index: Int, nb: Int)(implicit repository: ${name}RepositoryComponent): Either[Error, List[${name}Srv]] = {
+repository.findByUser(user.id, index, nb) match {
+case Left(error) => Left(error)
+case Right(${name.toLowerCase}s) => Right(${name.toLowerCase}s.map(ws => dbToSrv(ws)))
+}
+}
+
+#if (signature != null)
+    def findBySignature(signature: String)(implicit repository: ${name}RepositoryComponent): Either[Error, Option[${name}Srv]] = {
+    repository.findBySignature(signature) match {
+    case Left(error) => Left(error)
+    case Right(${name.toLowerCase}) => Right(Option(dbToSrv(${name.toLowerCase}.getOrElse(null))))
+    }
+    }
+#end
+
+#for (father <- fathers)
+    def findBy${father.entity.name}(signature: String)(implicit repository: ${name}RepositoryComponent): Either[Error, List[${name}Srv]] = {
+    repository.findBy${father.entity.name}(signature) match {
+    case Left(error) => Left(error)
+    case Right(${name.toLowerCase}s) => Right(${name.toLowerCase}s.map(ws => dbToSrv(ws)))
+    }
+    }
+#end
+
+#for (son <- sons)
+    #if(son.middleEntity!=null)
+        def findBy${son.entity.name}(signature: String)(implicit repository: ${name}RepositoryComponent): Either[Error, List[${name}Srv]] = {
+        repository.findBy${son.entity.name}(signature) match {
+        case Left(error) => Left(error)
+        case Right(${name.toLowerCase}s) => Right(${name.toLowerCase}s.map(ws => dbToSrv(ws)))
+        }
+        }
+    #end
+#end
+
+private def transformError(error: Error): Error = {
+error.code match {
+case CommonError.SQL_CONSTRAINT_VIOLATION => ErrorBuilder.invalidForm(ERROR_INVALID_${name.toUpperCase}_FORM, "Please verify the form", List(ErrorBuilder.fieldError("name", CommonError.ALREADY_EXISTS)))
+case _ => error
+}
+}
+
+private def isSignatureTooLong(signature: String): Boolean = SIGNATURE_MAX_LENGTH < signature.length
+
+private def isSignatureTooShort(signature: String): Boolean = SIGNATURE_MIN_LENGTH > signature.length
+
+private def isNameTooLong(name: String): Boolean = NAME_MAX_LENGTH < name.length
+
+private def isNameTooShort(name: String): Boolean = NAME_MIN_LENGTH > name.length
+
+private def isDescriptionTooLong(description: String): Boolean = DESCRIPTION_MAX_LENGTH < description.length
+
+private def dbToSrv(p${name}: ${name}DB): ${name}Srv = {
+${name}Srv(
+#for (father <- fathers)
+    #if (!father.mandatory) ${father.name}=p${name}.${father.name}.getOrElse(null),
+    #else ${father.name}=p${name}.${father.name},
+    #end
+#end
+#if (signature != null)
+    ${signature.name} = p${name}.${signature.name},
+#end
+#for (field <- fields)
+    #if (!field.mandatory) ${field.name}=p${name}.${field.name}.getOrElse(${field.default}),
+    #else ${field.name}=p${name}.${field.name},
+    #end
+#end
+#if (createdDate)
+    createdDate = p${name}.createdDate,
+#end
+#if (updatedDate)
+    updatedDate = p${name}.updatedDate.getOrElse(null),
+#end
+)
+}
+}
