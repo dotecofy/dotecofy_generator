@@ -1,7 +1,6 @@
 package com.dotecofy.generator.entities.improvement
 
-import com.dotecofy.generator.model.{Entity, Father}
-
+import com.dotecofy.generator.model.{Entity, Father, Signature}
 import com.dotecofy.generator.entities.workspace.Version
 
 object ImprovementVersion {
@@ -16,6 +15,7 @@ object ImprovementVersion {
     "com.dotecofy.improvement.improvementversion",
     "ImprovementVersion",
     "improvement_version",
+    signature = new Signature(generateFrom = "_random"),
     fathers = fathers
   )
 }

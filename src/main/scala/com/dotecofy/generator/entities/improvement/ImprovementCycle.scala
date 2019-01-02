@@ -1,7 +1,7 @@
 package com.dotecofy.generator.entities.improvement
 
 import com.dotecofy.generator.entities.context.Cycle
-import com.dotecofy.generator.model.{Entity, Father}
+import com.dotecofy.generator.model.{Entity, Father, Signature}
 
 object ImprovementCycle {
 
@@ -15,6 +15,7 @@ object ImprovementCycle {
     "com.dotecofy.improvement.improvementcycle",
     "ImprovementCycle",
     "improvement_cycle",
+    signature = new Signature(generateFrom = "_random"),
     fathers = fathers,
   )
 }

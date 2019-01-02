@@ -43,7 +43,7 @@ def update(signature: String, ${name.toLowerCase}: ${name}DB)(implicit session: 
 
 def delete(signature: String)(implicit session: DBSession = autoSession): Either[Error, Unit]
 
-def findByUser(userId: Int, index: Int, nb: Int)(implicit session: DBSession = autoSession): Either[Error, List[${name}DB]]
+def findByUser(userId: Int, index: Int, nb: Int, col:String=null, value:String=null)(implicit session: DBSession = autoSession): Either[Error, List[${name}DB]]
 
 def findIfAllowed(userId: Int, workspaceSign: String)(implicit session: DBSession = autoSession): Either[Error, Option[${name}DB]]
 
@@ -169,11 +169,22 @@ scalikejdbc.delete.from(${name}Repository).where.eq(column.signature, signature)
 Right()
 }
 
-override def findByUser(userId: Int, index: Int, nb: Int)(implicit session: DBSession): Either[Error, List[${name}DB]] = {
-//val ${name.toLowerCase}s: List[${name}DB] = sql"select \${w.result.*} from \${${name}Repository.as(w)} where id in(select id_tuple from group_right inner join `right` on group_right.id_right=right.id inner join user_group on group_right.id_group=user_group.id_group where user_group.id_user=\${userId} and right.right='VIEW_WORKSPACE')"
+override def findByUser(userId: Int, index: Int, nb: Int, col:String=null, value:String=null)(implicit session: DBSession): Either[Error, List[${name}DB]] = {
+
 val ${name.toLowerCase}s: List[${name}DB] =
-sql"select \${w.result.*} from \${${name}Repository.as(w)}"
+(() => {if(col==null || col.isEmpty || value==null || value.isEmpty) {
+sql"select \${w.result.*} from \${${name}Repository.as(w)} limit \${index}, \${nb}"
 .map(${name}Repository(w.resultName)).list.apply()
+}else {
+val likeVal = s"%$value%"
+var query: SQL[Nothing, NoExtractor]=null
+col match {
+case "signature" => query = sql"select \${w.result.*} from \${${name}Repository.as(w)} where w.signature like $likeVal limit \${index}, \${nb}"
+case "name" => query =sql"select \${w.result.*} from \${${name}Repository.as(w)} where w.name like $likeVal limit \${index}, \${nb}"
+}
+query .map(${name}Repository(w.resultName)).list.apply()
+}}).apply()
+
 Right(${name.toLowerCase}s)
 }
 

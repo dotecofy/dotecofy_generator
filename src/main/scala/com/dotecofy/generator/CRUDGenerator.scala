@@ -111,7 +111,22 @@ object CRUDGenerator {
     pw.close
   }
 
-  def genCRUDSonList(path: Path, entity: Entity): Unit = {
+  def genCRUDEdit(path: Path, entity: Entity): Unit = {
+    val src: Path = Paths.get(path.toString, entity.folder)
+
+    if (!Files.exists(src)) {
+      Files.createDirectories(src)
+    }
+
+    val
+    output = engine.layout("templates/ui/CRUDEdit.ssp", Map("entity" -> entity))
+
+    val pw = new PrintWriter(new File(src + "/Edit" + entity.name + ".vue"))
+    pw.write(output)
+    pw.close
+  }
+
+  def genCRUDListSon(path: Path, entity: Entity): Unit = {
     val src: Path = Paths.get(path.toString, entity.folder)
 
     if (!Files.exists(src)) {
@@ -131,6 +146,25 @@ object CRUDGenerator {
       output = engine.layout("templates/ui/CRUDSonList.ssp", Map("entity" -> son.entity, "fatherName" -> entity.name, "links" -> links.toList))
 
       val pw = new PrintWriter(new File(src + "/" + entity.name + son.entity.name + ".vue"))
+      pw.write(output)
+      pw.close
+    }
+  }
+
+  def genCRUDAddSon(path: Path, entity: Entity): Unit = {
+    val src: Path = Paths.get(path.toString, entity.folder)
+
+    if (!Files.exists(src)) {
+      Files.createDirectories(src)
+    }
+
+    var output: String = null
+
+    for (son <- entity.sons) {
+
+      output = engine.layout("templates/ui/CRUDAddSon.ssp", Map("entity" -> son.entity, "fatherName" -> entity.name))
+
+      val pw = new PrintWriter(new File(src + "/" + entity.name +"Add"+ son.entity.name + ".vue"))
       pw.write(output)
       pw.close
     }
@@ -193,7 +227,9 @@ object CRUDGenerator {
       genCRUDList(frontEndSrc, entity)
       genCRUDDetail(frontEndSrc, entity)
       genCRUDNew(frontEndSrc, entity)
-      genCRUDSonList(frontEndSrc, entity)
+      genCRUDEdit(frontEndSrc, entity)
+      genCRUDListSon(frontEndSrc, entity)
+      genCRUDAddSon(frontEndSrc, entity)
 
       genTestCRUDService(backEndTestSrc, entity)
     }

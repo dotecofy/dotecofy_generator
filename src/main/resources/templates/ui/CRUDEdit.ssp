@@ -57,7 +57,7 @@
     onSubmit(evt) {
     evt.preventDefault();
     //alert(JSON.stringify(this.form));
-    axios.post('http://localhost:8080/${name.toLowerCase}s', this.form ).then();
+    axios.put('http://localhost:8080/${name.toLowerCase}s', this.form ).then();
     },
     resultFormat(resp) {
     // console.log(JSON.stringify(resp))

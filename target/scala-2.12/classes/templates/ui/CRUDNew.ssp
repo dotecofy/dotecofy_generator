@@ -3,13 +3,20 @@
 <template>
     <b-form @submit="onSubmit">
     #for (father <- fathers)
-        <b-form-input
-            id="${father.name}"
-            type="number"
-            v-model.number="form.${father.name}"
+        <v-selectpage
+            class="form-control"
+            data="http://localhost:8080/${father.entity.name.toLowerCase}s/fsearch"
+            key-field="signature"
+            show-field="name"
+            search-field="searchValue"
+            v-model="form.signature"
+            :result-format="resultFormat"
+            :tb-columns="showFields"
+            title="${father.entity.name}"
             required
-            placeholder="id"
-        ></b-form-input>
+            placeholder="${father.entity.name}"
+            language="en"
+        ></v-selectpage>
     #end
     #for (field <- fields)
         <b-form-input
@@ -38,6 +45,11 @@
         ${field.name}: "",
     #end
     },
+    showFields: [
+    { title: "signature", data: "signature" },
+    { title: "name", data: "name" },
+    { title: "desc", data: "description" }
+    ],
     show: true
     };
     },
@@ -46,6 +58,11 @@
     evt.preventDefault();
     //alert(JSON.stringify(this.form));
     axios.post('http://localhost:8080/${name.toLowerCase}s', this.form ).then();
+    },
+    resultFormat(resp) {
+    // console.log(JSON.stringify(resp))
+    if (resp && resp.data) return resp.data;
+
     },
     }
     };

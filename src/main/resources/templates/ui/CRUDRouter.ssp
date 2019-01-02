@@ -15,6 +15,11 @@ const routes = [
     component: () => import("@${entity.folder}/New${entity.name}.vue"),
     },
     {
+    path: "/${entity.name.toLowerCase}s/:signature/edit",
+    name: "edit-${entity.name.toLowerCase}",
+    component: () => import("@${entity.folder}/Edit${entity.name}.vue"),
+    },
+    {
     path: "/${entity.name.toLowerCase}s/:signature",
     name: "${entity.name.toLowerCase}",
     component: () => import("@${entity.folder}/${entity.name}.vue"),
@@ -24,6 +29,11 @@ const routes = [
         path: "/${entity.name.toLowerCase}s/:signature/${son.entity.name.toLowerCase}s",
         name: "${entity.name.toLowerCase}-${son.entity.name.toLowerCase}",
         component: () => import("@${entity.folder}/${entity.name}${son.entity.name}.vue"),
+        },
+        {
+        path: "/${entity.name.toLowerCase}s/:signature/${son.entity.name.toLowerCase}s/add",
+        name: "${entity.name.toLowerCase}-${son.entity.name.toLowerCase}-add",
+        component: () => import("@${entity.folder}/${entity.name}Add${son.entity.name}.vue"),
         },
     #end
 #end

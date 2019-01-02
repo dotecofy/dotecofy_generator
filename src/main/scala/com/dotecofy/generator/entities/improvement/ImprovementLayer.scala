@@ -1,6 +1,6 @@
 package com.dotecofy.generator.entities.improvement
 
-import com.dotecofy.generator.model.{Entity, Father}
+import com.dotecofy.generator.model.{Entity, Father, Signature}
 import com.dotecofy.generator.entities.context.Layer
 
 object ImprovementLayer {
@@ -15,6 +15,7 @@ object ImprovementLayer {
     "com.dotecofy.improvement.improvementlayer",
     "ImprovementLayer",
     "improvement_layer",
+    signature = new Signature(generateFrom = "_random"),
     fathers = fathers
   )
 }

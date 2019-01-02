@@ -1,7 +1,7 @@
 package com.dotecofy.generator.entities.improvement
 
 import com.dotecofy.generator.entities.context.Kind
-import com.dotecofy.generator.model.{Entity, Father}
+import com.dotecofy.generator.model.{Entity, Father, Signature}
 
 object ImprovementKind {
 
@@ -20,6 +20,7 @@ object ImprovementKind {
     "com.dotecofy.improvement.improvementkind",
     "ImprovementKind",
     "improvement_kind",
+    signature = new Signature(generateFrom = "_random"),
     fathers = fathers
   )
 }

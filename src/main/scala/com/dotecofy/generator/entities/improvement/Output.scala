@@ -1,6 +1,5 @@
 package com.dotecofy.generator.entities.improvement
 
-import com.dotecofy.generator.entities.workspace.Feature
 import com.dotecofy.generator.model._
 
 object Output {
@@ -16,7 +15,7 @@ object Output {
   )
 
   val sons: List[Son] = List(
-    new Son(Feature.entity,"idOutput", "id_output"),
+    new Son(Verification.entity, "idOutput", "id_output"),
   )
 
   val entity: Entity = new Entity(

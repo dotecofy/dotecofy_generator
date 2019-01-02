@@ -4,6 +4,7 @@ val entity: Entity %>
 package ${pkg}
 
 import com.dotecofy.access.user.User
+import com.dotecofy.common.FatherSearch.{FSearchReq, FSearchRes}
 import org.json4s.{DefaultFormats, Formats}
 import org.scalatra.{CorsSupport, FutureSupport, ScalatraBase, ScalatraServlet}
 import org.scalatra.json.JacksonJsonSupport
@@ -41,6 +42,12 @@ ${name}Services.findByUser(user, 0, 50)
 
 post("/") {
 ${name}Services.create(user, parsedBody.extract[${name}Srv])
+}
+
+post("/fsearch") {
+val req = parsedBody.extract[FSearchReq]
+val ${name.toLowerCase}s = ${name}Services.findByUser(user, (req.pageNumber-1)*req.pageSize, req.pageSize, (() => {if(req.searchKey==null || req.searchKey.isEmpty){"name"} else{req.searchKey}}).apply(), req.searchValue).right.get
+FSearchRes(${name.toLowerCase}s.length, ${name.toLowerCase}s)
 }
 
 }

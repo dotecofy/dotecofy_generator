@@ -4,21 +4,23 @@ val entity: Entity %>
 <%@ val fatherName: String %>
 <%@ val links: List[Link] %>
 <template>
-<div>
-    <b-nav tabs>
-    #for (link <- links)
-        <b-nav-item :to="${link.link}" #if (link.active) active #end>${link.name}</b-nav-item>
-    #end
-    </b-nav>
-    <div>
-        <b-button-toolbar>
-            <b-button-group class="mx-1">
-            <b-btn to="/${name.toLowerCase}s/new">New</b-btn>
-            </b-button-group>
-        </b-button-toolbar>
-        <b-table striped hover :items="${name.toLowerCase}s" @row-clicked="rowClick"></b-table>
-    </div>
-</div>
+    <b-container>
+        <b-row class="str-row">
+        <b-nav tabs>
+            #for (link <- links)
+                <b-nav-item :to="${link.link}" #if (link.active) active #end>${link.name}</b-nav-item>
+            #end
+        </b-nav>
+        <div>
+            <b-button-toolbar>
+                <b-button-group class="mx-1">
+                <b-btn to="/${name.toLowerCase}s/new">New</b-btn>
+                </b-button-group>
+            </b-button-toolbar>
+            <b-table striped hover :items="${name.toLowerCase}s" @row-clicked="rowClick"></b-table>
+        </div>
+        </b-row>
+    </b-container>
 </template>
 
 <script>

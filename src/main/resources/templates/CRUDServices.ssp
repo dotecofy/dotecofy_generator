@@ -53,7 +53,7 @@ def update(user: User, signature: String, p${name}: ${name}Srv)(implicit reposit
 
 def delete(user: User, signature: String)(implicit repository: ${name}RepositoryComponent): Either[Error, Unit]
 
-def findByUser(user: User, index: Int, nb: Int)(implicit repository: ${name}RepositoryComponent): Either[Error, List[${name}Srv]]
+def findByUser(user: User, index: Int, nb: Int, col:String=null, value:String=null)(implicit repository: ${name}RepositoryComponent): Either[Error, List[${name}Srv]]
 
 #if (signature != null)
     def findBySignature(signature: String)(implicit repository: ${name}RepositoryComponent): Either[Error, Option[${name}Srv]]
@@ -159,8 +159,8 @@ override def delete(user: User, signature: String)(implicit repository: ${name}R
 repository.delete(signature)
 }
 
-override def findByUser(user: User, index: Int, nb: Int)(implicit repository: ${name}RepositoryComponent): Either[Error, List[${name}Srv]] = {
-repository.findByUser(user.id, index, nb) match {
+override def findByUser(user: User, index: Int, nb: Int, col:String=null, value:String=null)(implicit repository: ${name}RepositoryComponent): Either[Error, List[${name}Srv]] = {
+repository.findByUser(user.id, index, nb, col, value) match {
 case Left(error) => Left(error)
 case Right(${name.toLowerCase}s) => Right(${name.toLowerCase}s.map(ws => dbToSrv(ws)))
 }

@@ -2,25 +2,26 @@
 <%@ import
 val entity: Entity %>
 <template>
-<div>
-    <b-nav tabs>
-    <b-nav-item active>Detail</b-nav-item>
-    #for (son <- sons)
-        <b-nav-item :to="{path: '/${name.toLowerCase}s/' + this.$route.params.signature + '/${son.entity.name.toLowerCase}s'}">${son.entity.name}</b-nav-item>
-    #end
-    </b-nav>
-    <div>
-        <b-card
-            border-variant="primary"
-            v-bind:header="${name.toLowerCase}.name"
-            header-bg-variant="primary"
-            header-text-variant="white"
-            align="center"
-            >
-            <p class="card-text">{{${name.toLowerCase}.description}}</p>
-        </b-card>
-    </div>
-</div>
+    <b-container>
+        <b-row class="str-row">
+        <b-nav tabs>
+            <b-nav-item active>Detail</b-nav-item>
+            #for (son <- sons)
+                <b-nav-item :to="{path: '/${name.toLowerCase}s/' + this.$route.params.signature + '/${son.entity.name.toLowerCase}s'}">${son.entity.name}</b-nav-item>
+            #end
+        </b-nav>
+        <div class="card-detail">
+            <b-card
+                v-bind:header="${name.toLowerCase}.name"
+                header-bg-variant="light"
+                header-text-variant="dark"
+                align="center"
+                >
+                <p class="card-text">{{${name.toLowerCase}.description}}</p>
+            </b-card>
+        </div>
+        </b-row>
+    </b-container>
 </template>
 
 <script>

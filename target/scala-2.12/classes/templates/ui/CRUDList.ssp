@@ -2,14 +2,26 @@
 <%@ import
 val entity: Entity %>
 <template>
-    <div>
+    <b-container>
+        <b-row class="str-row">
         <b-button-toolbar>
-        <b-button-group class="mx-1">
+            <b-button-group class="mx-1">
             <b-btn to="/${name.toLowerCase}s/new">New</b-btn>
-        </b-button-group>
+            </b-button-group>
         </b-button-toolbar>
-        <b-table striped hover :items="${name.toLowerCase}s" @row-clicked="rowClick"></b-table>
-    </div>
+        </b-row>
+        <b-row class="str-row">
+        <b-table striped hover
+            :items="${name.toLowerCase}s"
+            :fields="fields"
+            @row-clicked="rowClick">
+            <template slot="actions" slot-scope="row">
+                <b-button size="sm" @click.stop="rowClickEdit(row.item)" class="mr-1">Edit</b-button>
+                <b-button size="sm" @click.stop="rowClickDel(row.item)" class="mr-1">Delete</b-button>
+            </template>
+        </b-table>
+        </b-row>
+    </b-container>
 </template>
 
 <script>
@@ -19,7 +31,12 @@ val entity: Entity %>
     name: '${name}s',
     data () {
     return {
-    ${name.toLowerCase}s: []
+    ${name.toLowerCase}s: [],
+    fields: [
+    { key: 'name', label: 'Name' },
+    { key: 'description', label: 'Description' },
+    { key: 'actions', label: 'Actions' }
+    ]
     }
     },
     created () {
@@ -44,6 +61,12 @@ val entity: Entity %>
     },
     rowClick(record) {
     this.$router.push('/${name.toLowerCase}s/'+record.signature)
+    },
+    rowClickEdit(record) {
+    this.$router.push('/${name.toLowerCase}s/'+record.signature+'/edit')
+    },
+    rowClickDel(record) {
+    this.$router.push('/${name.toLowerCase}s/'+record.signature+'/edit')
     }
     }
     }
